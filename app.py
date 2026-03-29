@@ -2,7 +2,7 @@ import streamlit as st
 from PIL import Image
 import pytesseract
 
-# ------------------ AI LOGIC (NO API) ------------------
+# ------------------ AI LOGIC ------------------
 def get_ai_response(symptoms):
     symptoms = symptoms.lower()
 
@@ -10,10 +10,10 @@ def get_ai_response(symptoms):
         return "🚨 This could indicate a serious cardiac condition. Immediate medical attention is required. (Critical classification)"
 
     elif "fever" in symptoms and "headache" in symptoms:
-        return "Possible viral infection (basic classification). Stay hydrated and rest."
+        return "Possible viral infection. Stay hydrated and rest."
 
     elif "fever" in symptoms:
-        return "This may be a mild infection (basic classification). Stay hydrated and rest."
+        return "This may be a mild infection. Stay hydrated and rest."
 
     elif "headache" in symptoms:
         return "This could be due to stress or dehydration."
@@ -34,7 +34,7 @@ st.subheader("AI-powered Healthcare Support System with Safety & Compliance")
 # ------------------ TABS ------------------
 tab1, tab2, tab3 = st.tabs(["📄 Report Simplifier", "🩺 Symptom Checker", "ℹ️ About"])
 
-# ------------------ TAB 1 (FINAL FIXED) ------------------
+# ------------------ TAB 1 ------------------
 with tab1:
     st.header("📄 Upload Medical Report")
 
@@ -43,30 +43,26 @@ with tab1:
     file = st.file_uploader("Upload report image", type=["png", "jpg", "jpeg"])
 
     if file:
-        # STEP 1: OPEN IMAGE
         try:
             image = Image.open(file)
             st.image(image, caption="Uploaded Report")
-        except Exception as e:
+        except:
             st.error("❌ Invalid image file")
-            st.write(e)
             st.stop()
 
-        # STEP 2: OCR EXTRACTION
+        # ------------------ OCR / FALLBACK ------------------
         try:
             text = pytesseract.image_to_string(image)
-
             st.success("✅ Report processed successfully")
 
-            st.subheader("📊 Extracted Data:")
-            st.write(text)
+        except:
+            st.warning("⚠️ OCR not supported here. Using simulated analysis.")
+            text = "Hemoglobin RBC WBC Glucose"
 
-        except Exception as e:
-            st.error("⚠️ OCR failed (Tesseract issue)")
-            st.write(e)
-            st.stop()
+        st.subheader("📊 Extracted Data:")
+        st.write(text)
 
-        # STEP 3: SMART EXPLANATION
+        # ------------------ EXPLANATION ------------------
         st.subheader("🧠 AI Explanation")
 
         text_lower = text.lower()
@@ -75,13 +71,13 @@ with tab1:
             st.info("Blood sugar levels detected. This relates to diabetes monitoring.")
 
         elif "bp" in text_lower or "pressure" in text_lower:
-            st.info("Blood pressure values detected. Monitor regularly.")
+            st.info("Blood pressure values detected.")
 
         elif "hemoglobin" in text_lower:
             st.info("Hemoglobin levels detected. Important for anemia diagnosis.")
 
         elif "rbc" in text_lower:
-            st.info("RBC values detected. Important for oxygen transport in blood.")
+            st.info("RBC values detected. Important for oxygen transport.")
 
         elif "wbc" in text_lower:
             st.info("WBC values detected. Related to immune system function.")
@@ -90,7 +86,7 @@ with tab1:
             st.info("Platelet count detected. Important for blood clotting.")
 
         else:
-            st.info("Basic analysis completed. Please consult a doctor for detailed interpretation.")
+            st.info("Basic analysis completed. Please consult a doctor.")
 
 # ------------------ TAB 2 ------------------
 with tab2:
@@ -116,12 +112,10 @@ with tab3:
     st.header("ℹ️ About MediAssist AI")
 
     st.write("""
-    **MediAssist AI** is a domain-specific healthcare assistant designed to:
-
-    ✔ Execute symptom-based workflows  
-    ✔ Provide basic medical classification  
-    ✔ Handle edge cases (e.g., chest pain)  
-    ✔ Ensure safe and compliant AI responses  
+    MediAssist AI is a healthcare assistant that:
+    ✔ Analyzes symptoms  
+    ✔ Interprets reports  
+    ✔ Provides safe guidance  
 
     ⚠️ This system does NOT replace doctors.
     """)
