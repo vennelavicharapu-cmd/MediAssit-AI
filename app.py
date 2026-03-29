@@ -2,7 +2,10 @@ import streamlit as st
 from PIL import Image
 import pytesseract
 
-# ------------------ AI LOGIC ------------------
+# ------------------ OCR SETUP ------------------
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+# ------------------ AI LOGIC (NO API) ------------------
 def get_ai_response(symptoms):
     symptoms = symptoms.lower()
 
@@ -10,19 +13,19 @@ def get_ai_response(symptoms):
         return "🚨 This could indicate a serious cardiac condition. Immediate medical attention is required. (Critical classification)"
 
     elif "fever" in symptoms and "headache" in symptoms:
-        return "Possible viral infection. Stay hydrated and rest."
+        return "Possible viral infection (basic classification). Stay hydrated, take rest, and monitor symptoms."
 
     elif "fever" in symptoms:
-        return "This may be a mild infection. Stay hydrated and rest."
+        return "This may be a mild infection (basic classification). Stay hydrated and rest."
 
     elif "headache" in symptoms:
-        return "This could be due to stress or dehydration."
+        return "This could be due to stress, dehydration, or lack of sleep (basic classification)."
 
     elif "cough" in symptoms:
-        return "This may be a common cold or respiratory issue."
+        return "This may be a common cold or respiratory issue (basic classification)."
 
     else:
-        return "Symptoms are unclear. Please consult a healthcare professional."
+        return "Symptoms are unclear. Unable to classify condition. Please consult a healthcare professional."
 
 # ------------------ PAGE CONFIG ------------------
 st.set_page_config(page_title="MediAssist AI", page_icon="🏥", layout="wide")
@@ -34,11 +37,11 @@ st.subheader("AI-powered Healthcare Support System with Safety & Compliance")
 # ------------------ TABS ------------------
 tab1, tab2, tab3 = st.tabs(["📄 Report Simplifier", "🩺 Symptom Checker", "ℹ️ About"])
 
-# ------------------ TAB 1 ------------------
+# ------------------ TAB 1 (FIXED UPLOAD SECTION) ------------------
 with tab1:
     st.header("📄 Upload Medical Report")
 
-    st.info("📌 Upload clear image (jpg/png only)")
+    st.info("📌 Please upload clear image (jpg/png) of medical report")
 
     file = st.file_uploader("Upload report image", type=["png", "jpg", "jpeg"])
 
@@ -46,47 +49,31 @@ with tab1:
         try:
             image = Image.open(file)
             st.image(image, caption="Uploaded Report")
-        except:
-            st.error("❌ Invalid image file")
-            st.stop()
 
-        # ------------------ OCR / FALLBACK ------------------
-        try:
+            # OCR extraction
             text = pytesseract.image_to_string(image)
+
             st.success("✅ Report processed successfully")
 
+            st.subheader("📊 Extracted Data:")
+            st.write(text)
+
+            st.subheader("🧠 AI Explanation")
+
+            if "fever" in text.lower():
+                st.info("The report suggests possible infection or fever-related condition.")
+
+            elif "glucose" in text.lower():
+                st.info("The report indicates glucose levels. Monitor for diabetes risk.")
+
+            elif "bp" in text.lower() or "pressure" in text.lower():
+                st.info("The report may indicate blood pressure-related values. Monitor regularly.")
+
+            else:
+                st.info("Report analyzed. Please consult a doctor for detailed interpretation.")
+
         except:
-            st.warning("⚠️ OCR not supported here. Using simulated analysis.")
-            text = "Hemoglobin RBC WBC Glucose"
-
-        st.subheader("📊 Extracted Data:")
-        st.write(text)
-
-        # ------------------ EXPLANATION ------------------
-        st.subheader("🧠 AI Explanation")
-
-        text_lower = text.lower()
-
-        if "glucose" in text_lower or "sugar" in text_lower:
-            st.info("Blood sugar levels detected. This relates to diabetes monitoring.")
-
-        elif "bp" in text_lower or "pressure" in text_lower:
-            st.info("Blood pressure values detected.")
-
-        elif "hemoglobin" in text_lower:
-            st.info("Hemoglobin levels detected. Important for anemia diagnosis.")
-
-        elif "rbc" in text_lower:
-            st.info("RBC values detected. Important for oxygen transport.")
-
-        elif "wbc" in text_lower:
-            st.info("WBC values detected. Related to immune system function.")
-
-        elif "platelet" in text_lower:
-            st.info("Platelet count detected. Important for blood clotting.")
-
-        else:
-            st.info("Basic analysis completed. Please consult a doctor.")
+            st.error("❌ Please upload a valid image file (jpg/png)")
 
 # ------------------ TAB 2 ------------------
 with tab2:
@@ -112,14 +99,24 @@ with tab3:
     st.header("ℹ️ About MediAssist AI")
 
     st.write("""
-    MediAssist AI is a healthcare assistant that:
-    ✔ Analyzes symptoms  
-    ✔ Interprets reports  
-    ✔ Provides safe guidance  
+    **MediAssist AI** is a domain-specific healthcare assistant designed to:
+
+    ✔ Execute symptom-based analysis workflows  
+    ✔ Provide basic condition classification  
+    ✔ Handle edge cases (e.g., chest pain detection)  
+    ✔ Ensure safe and compliant AI responses  
+
+    ### 🔒 Safety & Compliance
+    - Built with healthcare safety guardrails  
+    - Avoids harmful or misleading advice  
+    - Recommends professional consultation when needed  
+
+    ### 🎯 Goal
+    Make healthcare understandable and accessible for everyone.
 
     ⚠️ This system does NOT replace doctors.
     """)
 
 # ------------------ FOOTER ------------------
 st.markdown("---")
-st.caption("⚠️ Educational purposes only. Always consult a doctor.")
+st.caption("⚠️ Disclaimer: This system provides educational guidance only. Always consult a healthcare professional.")
